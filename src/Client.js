@@ -1,6 +1,17 @@
 var Client = function(clientURL){
   this.URL = clientURL;
-  this.files = {}; // files have fileNames and arrays of pieces;
+  this.files = {
+  // fileName: {
+  //   piecesNeeded: file.SHAs, //decreases as pieces are acquired
+  //   pieces: {
+  //     '<sha>': {
+  //       index: 0, // can be reconstructed from original torrent sha order.
+  //       data: '<data>',
+  //       URLsOfPeersThatHaveIt: ['<url>', '<url>', '<url>']
+  //     }
+  //   }
+  // }
+  };
 };
 
 Client.prototype.downloadTorrent = function(fileToRead, pathToWriteFile) {
@@ -14,7 +25,8 @@ Client.prototype.downloadTorrent = function(fileToRead, pathToWriteFile) {
       pieces: new Array(file.SHAs.length),
       piecesNeeded: file.SHAs,
       piecesPeersHave: {},
-      SHAs: file.SHAs
+      SHAs: file.SHAs,
+      ownedSHAs: []
     };
     var file = this.files[file.name];
     // time passes
@@ -47,24 +59,21 @@ Client.prototype.downloadTorrent = function(fileToRead, pathToWriteFile) {
 
 // Piece requesting and serving:
 Client.prototype.askAboutAvailablePiecesFrom = function(peerURL, fileName) {
-  return this.get('http://localhost:4003/file/dilbert/pieces');
+  return this.get(peerURL+'/file/'+fileName+'/pieces');
 };
 Client.prototype.requestPiece = function(peerURL, fileName, pieceSHA) {
-  var piece = this.get(peerURL+'/file/'+fileName+'/piece/'+pieceSHA);
-  return piece;
+  return this.get(peerURL+'/file/'+fileName+'/piece/'+pieceSHA);
 };
 Client.prototype.respondTo = function(relativeURL){
-  if(relativeURL.indexOf('/pieces')){
+  if(relativeURL.indexOf('/pieces') !== -1){
     // respond with list of piece SHAs available.
-    var fileName = relativeUrl.split('file/')[1].split('/pieces')[0];
-    return this.files[fileName].map(function(piece){
-      return piece.SHA;
-    });
+    var file = relativeURL.split('file/')[1].split('/pieces')[0];
+    return Object.keys(this.files[file].pieces);
   } else {
     // respond with requested piece.
-    var fileName = relativeUrl.split('file/')[1].split('/piece/')[0];
-    var pieceSHA = relativeUrl.split('file/')[1].split('/piece/')[1];
-    return this.files[fileName].pieces[pieceSHA];
+    var fileName = relativeURL.split('file/')[1].split('/piece/')[0];
+    var pieceSHA = relativeURL.split('file/')[1].split('/piece/')[1];
+    return this.files[fileName].pieces[pieceSHA].data;
   }
 };
 
@@ -74,7 +83,8 @@ Client.prototype.readTorrent = function(pathToTorrent) {
   return torrent;
 };
 Client.prototype.assemblePiecesIntoFile = function(pieces, pathToWriteFile) {
-  var assembledData = pieces.join('');
+  var orderedPieces = [];
+  var assembledData = orderedPieces.join('');
   return assembledData;
 };
 
@@ -88,13 +98,12 @@ Client.prototype.registerAsPeer = function(torrentURL){
 
 // Spec/helper methods
 Client.prototype.url = function() {
-  return this.url;
+  return this.URL;
 };
 Client.prototype.givePiece = function(fileName, pieceSHA, pieceData) {
   var piece = {fileName: fileName, sha: pieceSHA, data: pieceData};
   this.files[fileName] = this.files[fileName] || {pieces: []};
-  this.files[fileName]
-  return piece;
+  this.files[fileName].pieces[pieceSHA] = {data: pieceData, URLsOfPeersThatHaveIt: []};
 };
 Client.prototype.get = function(url) {
   return get.call(this, url);
