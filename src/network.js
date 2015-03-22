@@ -1,16 +1,16 @@
 var network = {
-  trackerURL: 'http://tracker.com',
+  trackerUrl: 'http://tracker.com',
   endpoints: {}  // endpoints can register themselves.
 };
 
 var get = function(url){
-  var baseURL = url.slice(0, url.indexOf('/', 2+url.indexOf('//')));
-  var relativeURL = url.slice(url.indexOf('/', 2+url.indexOf('//')));
-  if(url.indexOf(network.trackerURL) === 0){
-    return tracker(relativeURL, this);
+  var baseUrl = url.slice(0, url.indexOf('/', 2+url.indexOf('//')));
+  var relativeUrl = url.slice(url.indexOf('/', 2+url.indexOf('//')));
+  if(url.indexOf(network.trackerUrl) === 0){
+    return tracker(relativeUrl, this);
   } else {
-    console.log(this.url(),'respondTo',url);
-    return network.endpoints[baseURL].respondTo(relativeURL);
+    // console.log(this.url(), 'respondTo', url);
+    return network.endpoints[baseUrl].respondTo(relativeUrl);
   }
 };
 
@@ -24,11 +24,11 @@ var tracker = function(action, client){
     },
     '/seed/add': function registerSeed(client){
       network.endpoints[client.url()] = client;
-      return '201 created';
+      return network.endpoints;
     },
     '/seed/remove': function deregisterSeed(client){
       network.endpoints.delete(client.url());
-      return '204 deleted';
+      return network.endpoints;
     }
   };
   return actions[action](client);
