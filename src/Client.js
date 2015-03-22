@@ -5,12 +5,29 @@ var Client = function(clientURL){
   };
 };
 
+Client.prototype.download = function(torrent){
+  var peerUrl = this.askForSeeds(torrent.trackerUrl);
+  console.log('peerUrl', peerUrl);
+  var client = this;
+  var availableShas = client.askAboutAvailablePiecesFrom(peerUrl);
+  console.log('availableShas',availableShas);
+  var allPieces = availableShas.map(function(sha){
+    var response = client.requestPiece(peerUrl, sha);
+    client.shasAcquired[sha] = response;
+    return response;
+  });
+  console.log('allPieces', allPieces);
+  var completeFile = this.assemblePieces(torrent.shas, allPieces);
+  console.log('completeFile',completeFile);
+  return completeFile;
+};
+
 // Piece requesting and serving:
 Client.prototype.askAboutAvailablePiecesFrom = function(peerUrl) {
   return this.get(peerUrl+'/pieces');
 };
-Client.prototype.requestPiece = function(peerUrl, sha) {
-  return this.get(peerUrl+'/piece/'+sha);
+Client.prototype.requestPiece = function(url, sha) {
+  return this.get(url+'/piece/'+sha);
 };
 Client.prototype.shasNeededForTorrent = function(torrent){
   return torrent.shas.filter(function(sha){
@@ -45,11 +62,11 @@ Client.prototype.assemblePieces = function(torrentShas, pieces) {
 };
 
 // Tracker interaction:
-Client.prototype.askForSeeds = function(torrentURL){
-  return this.get(torrentURL+'/seeds');
+Client.prototype.askForSeeds = function(trackerURL){
+  return this.get(trackerURL+'/seeds');
 };
-Client.prototype.registerAsPeer = function(torrentURL){
-  return this.get(torrentURL+'/seed/add');
+Client.prototype.registerAsPeer = function(trackerURL){
+  return this.get(trackerURL+'/seed/add');
 }
 
 // Spec/helper methods

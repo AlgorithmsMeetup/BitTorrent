@@ -5,7 +5,7 @@ describe("BitTorrent Client", function(){
   beforeEach(function(){
     client = new Client('http://localhost:7001');
     network = {
-      trackerUrl: 'http://tracker.com',
+      trackerUrl: 'http://localhost:7000',
       endpoints: {}  // endpoints can register themselves.
     };
   });
@@ -18,9 +18,7 @@ describe("BitTorrent Client", function(){
     });
   });
   it('registers with the tracker', function(){
-    console.log('network.endpoints',network.endpoints);
     client.registerAsPeer(network.trackerUrl);
-    console.log('network.endpoints',network.endpoints);
     expect(Object.keys(network.endpoints)).to.include(client.url());
   });
   it('gets a list of peers from a tracker', function(){
@@ -70,6 +68,54 @@ describe("BitTorrent Client", function(){
     var completeFile = client.assemblePieces(torrentShas, pieces);
     expect(completeFile).to.equal('abc');
   });
+  it('downloads all the pieces if only one peer', function(){
+    var torrent = {
+      "trackerUrl": "http://localhost:7000",
+      "name": "file1.txt",
+      "piecesSize": 1,
+      "shas": ["1", "2", "3"]
+    };
+    var pieces = [
+      {sha: '1', data: 'a'},
+      {sha: '2', data: 'b'},
+      {sha: '3', data: 'c'}
+    ];
+    var peer = new Client('http://localhost:7002');
+    peer.registerAsPeer(network.trackerUrl);
+    pieces.forEach(function(piece){
+      peer.givePiece(piece);
+    });
+    expect(client.download(torrent)).to.equal('abc');
+  });
+  xit('downloads all the pieces if split among multiple peers', function(){
+    var torrent = {
+      "trackerUrl": "http://localhost:7000",
+      "name": "file1.txt",
+      "piecesSize": 1,
+      "shas": ["1", "2", "3"]
+    };
+    var pieces1 = [
+      {sha: '1', data: 'a'},
+      {sha: '3', data: 'c'},
+      {sha: '5', data: 'e'}
+    ];
+    var pieces2 = [
+      {sha: '2', data: 'b'},
+      {sha: '4', data: 'd'},
+      {sha: '6', data: 'f'}
+    ];
+    var peer1 = new Client('http://localhost:7002');
+    var peer2 = new Client('http://localhost:7003');
+    peer1.registerAsPeer(network.trackerUrl);
+    peer2.registerAsPeer(network.trackerUrl);
+    pieces1.forEach(function(piece){
+      peer1.givePiece(piece);
+    });
+    pieces2.forEach(function(piece){
+      peer2.givePiece(piece);
+    });
+    expect(client.download(torrent)).to.equal('abcdef');
+  })
   xit('generates a new .torrent from a file');
   xit('verifies the authenticity of a piece');
   xit('notices new peers');
