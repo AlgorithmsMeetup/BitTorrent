@@ -56,17 +56,18 @@ describe("BitTorrent Client", function(){
 
   });
   it('assembles pieces when it has them all', function(){
-    var torrentShas = ['1', '2', '3'];
+    var torrentShas = ['1', '3', '2', '4'];
     var pieces = [
       {sha: '1', data: 'a'},
-      {sha: '2', data: 'b'},
-      {sha: '3', data: 'c'},
+      {sha: '2', data: 'c'},
+      {sha: '3', data: 'b'},
+      {sha: '4', data: 'd'},
     ];
     pieces.forEach(function(piece){
       client.givePiece(piece);
     });
     var completeFile = client.assemblePieces(torrentShas, pieces);
-    expect(completeFile).to.equal('abc');
+    expect(completeFile).to.equal('abcd');
   });
   it('downloads all the pieces if only one peer', function(){
     var torrent = {
@@ -87,22 +88,22 @@ describe("BitTorrent Client", function(){
     });
     expect(client.download(torrent)).to.equal('abc');
   });
-  xit('downloads all the pieces if split among multiple peers', function(){
+  it('downloads all the pieces if split among multiple peers', function(){
     var torrent = {
-      "trackerUrl": "http://localhost:7000",
-      "name": "file1.txt",
-      "piecesSize": 1,
-      "shas": ["1", "2", "3"]
+      'trackerUrl': 'http://localhost:7000',
+      'name': 'file1.txt',
+      'piecesSize': 1,
+      'shas': ['6', '5', '4', '3', '2', '1' ]
     };
     var pieces1 = [
-      {sha: '1', data: 'a'},
-      {sha: '3', data: 'c'},
-      {sha: '5', data: 'e'}
+      {sha: '1', data: 't'},
+      {sha: '3', data: 'd'},
+      {sha: '5', data: 'd'}
     ];
     var pieces2 = [
-      {sha: '2', data: 'b'},
-      {sha: '4', data: 'd'},
-      {sha: '6', data: 'f'}
+      {sha: '2', data: 'i'},
+      {sha: '4', data: 'i'},
+      {sha: '6', data: 'u'}
     ];
     var peer1 = new Client('http://localhost:7002');
     var peer2 = new Client('http://localhost:7003');
@@ -114,7 +115,7 @@ describe("BitTorrent Client", function(){
     pieces2.forEach(function(piece){
       peer2.givePiece(piece);
     });
-    expect(client.download(torrent)).to.equal('abcdef');
+    expect(client.download(torrent)).to.equal('udidit');
   })
   xit('generates a new .torrent from a file');
   xit('verifies the authenticity of a piece');

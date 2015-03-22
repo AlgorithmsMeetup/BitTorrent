@@ -6,19 +6,29 @@ var Client = function(clientURL){
 };
 
 Client.prototype.download = function(torrent){
-  var peerUrl = this.askForSeeds(torrent.trackerUrl);
-  console.log('peerUrl', peerUrl);
-  var client = this;
-  var availableShas = client.askAboutAvailablePiecesFrom(peerUrl);
-  console.log('availableShas',availableShas);
-  var allPieces = availableShas.map(function(sha){
-    var response = client.requestPiece(peerUrl, sha);
-    client.shasAcquired[sha] = response;
+  var client = this; // to prevent loss of context
+  // Get peers from tracker
+  var peerUrls = this.askForSeeds(torrent.trackerUrl);
+  // console.log('peerUrls:', peerUrls);
+  // Find out what SHAs the peers have
+  var availableShas = peerUrls.map(function(url){
+    return client.askAboutAvailablePiecesFrom(url).map(function(sha){
+      return {url: url, sha: sha};
+    });
+  }).reduce(function(allUrlShaPairs, setOfUrlShaPairs){
+    return allUrlShaPairs.concat(setOfUrlShaPairs);
+  }, []);
+  // console.log('availableShas:',availableShas);
+  // Request the SHAs needed
+  var allPieces = availableShas.map(function(UrlShaPair){
+    var response = client.requestPiece(UrlShaPair.url, UrlShaPair.sha);
+    client.shasAcquired[UrlShaPair.sha] = response;
     return response;
   });
-  console.log('allPieces', allPieces);
+  // console.log('allPieces:', allPieces, this.shasAcquired);
+  // Assemble the data into the complete file
   var completeFile = this.assemblePieces(torrent.shas, allPieces);
-  console.log('completeFile',completeFile);
+  // console.log('completeFile:',completeFile);
   return completeFile;
 };
 
