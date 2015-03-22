@@ -18,9 +18,12 @@ Client.prototype.download = function(torrent){
   }).reduce(function(allUrlShaPairs, setOfUrlShaPairs){
     return allUrlShaPairs.concat(setOfUrlShaPairs);
   }, []);
-  // console.log('availableShas:',availableShas);
+  // console.log('availableShas:',availableShas.map(function(pair){ return pair.sha; }));
+  // Filter out unneeded SHAs
+  var filteredShas = this.shasNeededForTorrent(torrent, availableShas);
+  // console.log('filteredShas', filteredShas.map(function(pair){ return pair.sha; }));
   // Request the SHAs needed
-  var allPieces = availableShas.map(function(UrlShaPair){
+  var allPieces = filteredShas.map(function(UrlShaPair){
     var response = client.requestPiece(UrlShaPair.url, UrlShaPair.sha);
     client.shasAcquired[UrlShaPair.sha] = response;
     return response;
@@ -39,9 +42,9 @@ Client.prototype.askAboutAvailablePiecesFrom = function(peerUrl) {
 Client.prototype.requestPiece = function(url, sha) {
   return this.get(url+'/piece/'+sha);
 };
-Client.prototype.shasNeededForTorrent = function(torrent){
-  return torrent.shas.filter(function(sha){
-    return this.shasAcquired.indexOf(sha) === -1;
+Client.prototype.shasNeededForTorrent = function(torrent, shaUrlPairs){
+  return shaUrlPairs.filter(function(shaUrlPair){
+    return torrent.shas.indexOf(shaUrlPair.sha) !== -1;
   });
 };
 Client.prototype.respondTo = function(relativeUrl){
@@ -88,4 +91,7 @@ Client.prototype.givePiece = function(piece) {
 };
 Client.prototype.get = function(url) {
   return get.call(this, url);
+};
+Client.prototype.piecesAcquired = function(){
+  return this.shasAcquired;
 };

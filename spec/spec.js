@@ -117,6 +117,36 @@ describe("BitTorrent Client", function(){
     });
     expect(client.download(torrent)).to.equal('udidit');
   })
+  it('downloads *only* the pieces it needs', function(){
+    var torrent = {
+      'trackerUrl': 'http://localhost:7000',
+      'name': 'file1.txt',
+      'piecesSize': 1,
+      'shas': ['1', '2', '3', '4']
+    };
+    var pieces1 = [
+      {sha: '1', data: 'g'},
+      {sha: '3', data: 'w'},
+      {sha: '5', data: 'x'}
+    ];
+    var pieces2 = [
+      {sha: '2', data: 'g'},
+      {sha: '4', data: 'p'},
+      {sha: '6', data: 'z'}
+    ];
+    var peer1 = new Client('http://localhost:7002');
+    var peer2 = new Client('http://localhost:7003');
+    peer1.registerAsPeer(network.trackerUrl);
+    peer2.registerAsPeer(network.trackerUrl);
+    pieces1.forEach(function(piece){
+      peer1.givePiece(piece);
+    });
+    pieces2.forEach(function(piece){
+      peer2.givePiece(piece);
+    });
+    expect(client.download(torrent)).to.equal('ggwp');
+    expect(Object.keys(client.piecesAcquired())).to.not.include('5');
+  })
   xit('generates a new .torrent from a file');
   xit('verifies the authenticity of a piece');
   xit('notices new peers');
