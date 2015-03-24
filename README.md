@@ -5,9 +5,9 @@ Reading:
 
 API:
 
-- ```askForSeeds
+- askForSeeds
   `get('http://localhost:7000/seeds')`
-  // Returns list of peer urls from tracker.```
+  // Returns list of peer urls from tracker.
 
 - registerAsPeer
   `get('http://localhost:7000/seed/add')`
