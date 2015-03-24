@@ -5,12 +5,12 @@ Reading:
 
 API:
 
-- askForSeeds
-  get('http://localhost:7000/seeds')
-  // Returns list of peer urls from tracker.
+- ```askForSeeds
+  `get('http://localhost:7000/seeds')`
+  // Returns list of peer urls from tracker.```
 
 - registerAsPeer
-  `post('http://localhost:7000/seed/add')`
+  `get('http://localhost:7000/seed/add')`
   // Adds url to tracker's list of peers.
 
 - askAboutAvailablePiecesFrom
