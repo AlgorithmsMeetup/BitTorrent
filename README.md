@@ -1,5 +1,8 @@
 #BitTorrent
 
+Reading:
+- [wikipedia/bittorrent](https://en.wikipedia.org/wiki/BitTorrent)
+
 API:
 
 - askForSeeds
