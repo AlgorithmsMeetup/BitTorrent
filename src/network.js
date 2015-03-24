@@ -1,3 +1,4 @@
+// You shouldn't change anything in here, but you can reference it.
 var network = {
   trackerUrl: 'http://localhost:7000',
   endpoints: {}  // endpoints can register themselves.
