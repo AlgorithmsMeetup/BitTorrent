@@ -146,11 +146,14 @@ describe("BitTorrent Client", function(){
     });
     expect(client.download(torrent)).to.equal('ggwp');
     expect(Object.keys(client.piecesAcquired())).to.not.include('5');
-  })
-  xit('generates a new .torrent from a file');
-  xit('verifies the authenticity of a piece');
-  xit('notices new peers');
-  xit('handles peer disconnection');
-  xit('continues to seed after it has all pieces');
-  xit('trades more with peers who reciprocate');
+  });
+  context('nightmare mode–implement one or more of the following:', function(){
+    xit('generates a new .torrent from a file');
+    xit('verifies the authenticity of a piece');
+    xit('notices new peers');
+    xit('handles peer disconnection');
+    xit('continues to seed after it has all pieces');
+    xit('trades more with peers who reciprocate');
+    xit('refactor to use ExpressJS');
+  });
 });

@@ -3,6 +3,9 @@ var Client = function(clientURL){
   this.shasAcquired = {
     // '<sha>': '<data>'
   };
+  this.urlForSha = {
+    // '<sha>': '<peerUrl>'
+  }
 };
 
 Client.prototype.download = function(torrent){
@@ -13,19 +16,22 @@ Client.prototype.download = function(torrent){
   // Find out what SHAs the peers have
   var availableShas = peerUrls.map(function(url){
     return client.askAboutAvailablePiecesFrom(url).map(function(sha){
-      return {url: url, sha: sha};
+      client.urlForSha[sha] = url;
+      return sha;
     });
-  }).reduce(function(allUrlShaPairs, setOfUrlShaPairs){
-    return allUrlShaPairs.concat(setOfUrlShaPairs);
+  }).reduce(function(allShas, aPeersShas){
+    return allShas.concat(aPeersShas);
   }, []);
-  // console.log('availableShas:',availableShas.map(function(pair){ return pair.sha; }));
+  // console.log('availableShas:',availableShas);
+  // console.log('urlsForSha:', client.urlForSha);
   // Filter out unneeded SHAs
-  var filteredShas = this.shasNeededForTorrent(torrent, availableShas);
+  var filteredShas = this.filterShasNeededForTorrent(torrent, availableShas);
   // console.log('filteredShas', filteredShas.map(function(pair){ return pair.sha; }));
-  // Request the SHAs needed
-  var allPieces = filteredShas.map(function(UrlShaPair){
-    var response = client.requestPiece(UrlShaPair.url, UrlShaPair.sha);
-    client.shasAcquired[UrlShaPair.sha] = response;
+  // Request the pieces needed
+  var allPieces = filteredShas.map(function(sha){
+    // console.log('client.urlForSha[sha]',client.urlForSha[sha])
+    var response = client.requestPiece(client.urlForSha[sha], sha);
+    client.shasAcquired[sha] = response;
     return response;
   });
   // console.log('allPieces:', allPieces, this.shasAcquired);
@@ -42,9 +48,9 @@ Client.prototype.askAboutAvailablePiecesFrom = function(peerUrl) {
 Client.prototype.requestPiece = function(url, sha) {
   return this.get(url+'/piece/'+sha);
 };
-Client.prototype.shasNeededForTorrent = function(torrent, shaUrlPairs){
-  return shaUrlPairs.filter(function(shaUrlPair){
-    return torrent.shas.indexOf(shaUrlPair.sha) !== -1;
+Client.prototype.filterShasNeededForTorrent = function(torrent, shas){
+  return shas.filter(function(sha){
+    return torrent.shas.indexOf(sha) !== -1;
   });
 };
 Client.prototype.respondTo = function(relativeUrl){
@@ -62,12 +68,12 @@ Client.prototype.respondTo = function(relativeUrl){
   }
 };
 
-// File read and write:
-Client.prototype.readTorrent = function(pathToTorrent) {
+// 'File' read and write:
+Client.prototype.readTorrent = function(pathToTorrent) { // return torrent object
   var torrent = pathToTorrent;
   return torrent;
 };
-Client.prototype.assemblePieces = function(torrentShas, pieces) {
+Client.prototype.assemblePieces = function(torrentShas, pieces) { // return 'file' string
   var client = this;
   return torrentShas.map(function(sha){
     return client.shasAcquired[sha];
@@ -75,22 +81,24 @@ Client.prototype.assemblePieces = function(torrentShas, pieces) {
 };
 
 // Tracker interaction:
-Client.prototype.askForSeeds = function(trackerURL){
+Client.prototype.askForSeeds = function(trackerURL){ // return list of peerUrls
   return this.get(trackerURL+'/seeds');
 };
-Client.prototype.registerAsPeer = function(trackerURL){
+Client.prototype.registerAsPeer = function(trackerURL){ // add self to tracker
   return this.get(trackerURL+'/seed/add');
 }
 
-// Spec/helper methods
+// Helper methods
 Client.prototype.url = function() {
   return this.URL;
 };
-Client.prototype.givePiece = function(piece) {
-  this.shasAcquired[piece.sha] = piece.data;
-};
 Client.prototype.get = function(url) {
   return get.call(this, url);
+};
+
+// Spec methods
+Client.prototype.givePiece = function(piece) {
+  this.shasAcquired[piece.sha] = piece.data;
 };
 Client.prototype.piecesAcquired = function(){
   return this.shasAcquired;
