@@ -6,7 +6,7 @@ describe("BitTorrent Client", function(){
     client = new Client('http://localhost:7001');
     network = {
       trackerUrl: 'http://localhost:7000',
-      endpoints: {}  // endpoints can register themselves.
+      peers: {}  // peers can register themselves.
     };
   });
   it('reads a .torrent file', function(){
@@ -19,14 +19,14 @@ describe("BitTorrent Client", function(){
   });
   it('registers with the tracker', function(){
     client.registerAsPeer(network.trackerUrl);
-    expect(Object.keys(network.endpoints)).to.include(client.url());
+    expect(Object.keys(network.peers)).to.include(client.url());
   });
   it('gets a list of peers from a tracker', function(){
-    network.endpoints['http://localhost:7002'] = '<Client>';
-    network.endpoints['http://localhost:7003'] = '<Client>';
+    network.peers['http://localhost:7002'] = '<Client>';
+    network.peers['http://localhost:7003'] = '<Client>';
     // make sure client doesn't receive its own url back
     client.registerAsPeer(network.trackerUrl);
-    expect(Object.keys(network.endpoints)).to.deep.equal(['http://localhost:7002', 'http://localhost:7003', 'http://localhost:7001'])
+    expect(Object.keys(network.peers)).to.deep.equal(['http://localhost:7002', 'http://localhost:7003', 'http://localhost:7001'])
     expect(client.askForSeeds(network.trackerUrl)).to.deep.equal(['http://localhost:7002', 'http://localhost:7003']);
   });
   it('requests a list of available pieces in a file from a peer', function(){

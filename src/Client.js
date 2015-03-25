@@ -70,8 +70,7 @@ Client.prototype.respondTo = function(relativeUrl){
 
 // 'File' read and write:
 Client.prototype.readTorrent = function(pathToTorrent) { // return torrent object
-  var torrent = pathToTorrent;
-  return torrent;
+  return pathToTorrent;
 };
 Client.prototype.assemblePieces = function(torrentShas, pieces) { // return 'file' string
   var client = this;
